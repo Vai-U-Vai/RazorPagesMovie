@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RazorPagesMovie.Data;
 using RazorPagesMovie.Models;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace RazorPagesMovie.Pages.Movies
 {
@@ -27,7 +29,11 @@ namespace RazorPagesMovie.Pages.Movies
         
         [BindProperty(SupportsGet = true)]
         public string? MovieGenre { get; set; }
-        
+        [BindProperty(SupportsGet = true)]
+        public int PageNumber { get; set; } = 1; // Номер текущей страницы
+
+        public int PageSize { get; set; } = 10; // Количество фильмов на странице
+        public IPagedList<Movie> PagedMovies { get; set; } = default!; // Для пагинации
         public async Task OnGetAsync()
         {
             IQueryable<string> genreQuery = from m in _context.Movie
@@ -45,7 +51,10 @@ namespace RazorPagesMovie.Pages.Movies
                 movies = movies.Where(x => x.Genre == MovieGenre);
             }
             Genres = new SelectList(await genreQuery.Distinct().ToListAsync());
-            Movie = await movies.ToListAsync();
+
+
+            var movieList = await movies.ToListAsync();
+            PagedMovies = movieList.ToPagedList(PageNumber, PageSize);
         }
     }
 }
